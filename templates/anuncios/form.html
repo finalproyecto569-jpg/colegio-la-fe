@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set titulo_form = "Editar anuncio" if editando else "Nuevo anuncio" %}
+{% block titulo %}{{ titulo_form }}{% endblock %}
+{% block encabezado %}{{ titulo_form }}{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta form-angosto">
+    <div class="tarjeta-cabecera">
+        <h2>Datos del anuncio</h2>
+        <a href="{{ url_for('principal.inicio') }}" class="btn btn-claro btn-sm">Volver</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="formulario js-validar">
+        <div class="campo">
+            <label for="titulo">Título <span class="req">*</span></label>
+            <input type="text" id="titulo" name="titulo" value="{{ datos.titulo or '' }}" required minlength="5" maxlength="150"
+                   placeholder="Ej: Feria de la ciencia 2026">
+            <small class="error-campo"></small>
+        </div>
+
+        <div class="campo">
+            <label for="fecha_evento">Fecha del evento</label>
+            <input type="date" id="fecha_evento" name="fecha_evento" value="{{ datos.fecha_evento or '' }}" style="max-width: 260px">
+            <small class="ayuda">Opcional. Déjala vacía si es solo un aviso.</small>
+            <small class="error-campo"></small>
+        </div>
+
+        <div class="campo">
+            <label for="descripcion">Descripción <span class="req">*</span></label>
+            <textarea id="descripcion" name="descripcion" required minlength="10" maxlength="1000"
+                      placeholder="¿De qué se trata? ¿Dónde y a qué hora?">{{ datos.descripcion or '' }}</textarea>
+            <small class="error-campo"></small>
+        </div>
+
+        <div class="campo">
+            <label for="imagen">Imagen</label>
+            <input type="file" id="imagen" name="imagen" accept=".jpg,.jpeg,.png,.webp,.gif">
+            <small class="ayuda">Opcional. Formatos: JPG, PNG, WEBP o GIF.</small>
+            {% if editando and datos.imagen %}
+                <img src="{{ url_for('static', filename=datos.imagen) }}" alt="Imagen actual" class="anuncio-imagen" style="max-width: 320px">
+                <label class="check"><input type="checkbox" name="quitar_imagen" value="1"> Quitar la imagen actual</label>
+            {% endif %}
+            <small class="error-campo"></small>
+        </div>
+
+        <div class="botones-form">
+            <a href="{{ url_for('principal.inicio') }}" class="btn btn-claro">Cancelar</a>
+            <button type="submit" class="btn btn-primario">Publicar</button>
+        </div>
+    </form>
+</article>
+{% endblock %}

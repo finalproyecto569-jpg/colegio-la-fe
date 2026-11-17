@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block encabezado %}{{ titulo }}{% endblock %}
+
+{% block contenido %}
+<p class="suave" style="margin-bottom:1rem">{{ texto }}</p>
+
+<section class="rejilla rejilla-grupos">
+    {% for g in grupos %}
+        <a href="{{ url_for(inicio, grupo=g.grupo) }}" class="tarjeta grupo-tarjeta animar">
+            <span class="grupo-grado">
+                {% if g.grupo == 'SIN GRUPO' %}Sin grupo asignado{% else %}Grado {{ g.grado }}°{% endif %}
+            </span>
+            <span class="grupo-nombre">{{ 'Otras' if g.grupo == 'SIN GRUPO' else g.grupo }}</span>
+            <div class="grupo-datos">
+                <span><strong>{{ g.asignaturas }}</strong> asignatura(s)</span>
+                <span><strong>{{ g.estudiantes }}</strong> estudiante(s)</span>
+            </div>
+            <span class="grupo-ver">Ver asignaturas</span>
+        </a>
+    {% else %}
+        <div class="tarjeta vacio">No tienes asignaturas asignadas.</div>
+    {% endfor %}
+</section>
+{% endblock %}

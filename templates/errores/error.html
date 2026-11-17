@@ -1,0 +1,10 @@
+{% extends "base.html" if usuario_actual.id else "errores/simple.html" %}
+{% block titulo %}Error {{ codigo }}{% endblock %}
+{% block encabezado %}Error {{ codigo }}{% endblock %}
+{% block contenido %}
+<div class="tarjeta pagina-error">
+    <div class="codigo">{{ codigo }}</div>
+    <h2 style="margin:.6rem 0">{{ mensaje }}</h2>
+    <a href="{{ url_for('principal.inicio') }}" class="btn btn-primario">Volver al inicio</a>
+</div>
+{% endblock %}

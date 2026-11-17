@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes{% endblock %}
+{% block encabezado %}Reporte académico{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta-cabecera">
+    <p class="suave">Elige un grupo para ver el reporte de sus estudiantes.</p>
+    <a href="{{ url_for('reportes.index', programa='') }}" class="btn btn-claro">Ver todos los grupos juntos</a>
+</div>
+
+<section class="rejilla rejilla-grupos">
+    {% for t in tarjetas %}
+        <a href="{{ url_for('reportes.index', programa=t.grupo) }}" class="tarjeta grupo-tarjeta animar">
+            <span class="grupo-grado">Grado {{ t.grado }}°</span>
+            <span class="grupo-nombre">{{ t.grupo }}</span>
+            <div class="grupo-datos">
+                <span>Promedio <strong>{{ t.promedio }}</strong></span>
+                <span><strong>{{ t.aprobando }}</strong> aprobando</span>
+            </div>
+            <div class="grupo-datos">
+                <span class="{{ 'texto-alerta' if t.riesgo.alto }}"><strong>{{ t.riesgo.alto }}</strong> en riesgo alto</span>
+                <span><strong>{{ t.riesgo.medio }}</strong> en riesgo medio</span>
+            </div>
+            <span class="grupo-ver">Ver reporte</span>
+        </a>
+    {% else %}
+        <div class="tarjeta vacio">No hay grupos con asignaturas todavía.</div>
+    {% endfor %}
+</section>
+{% endblock %}

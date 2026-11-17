@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block titulo %}Alertas{% endblock %}
+{% block encabezado %}Alertas{{ ' · ' ~ filtros.grupo if filtros.grupo else ' · Todos los grupos' }}{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta-cabecera">
+    {% if filtros.grupo %}
+        <a href="{{ url_for('cursos.lista', grupo=filtros.grupo) }}" class="btn btn-claro btn-sm">Volver al grupo {{ filtros.grupo }}</a>
+    {% else %}
+        <a href="{{ url_for('cursos.lista') }}" class="btn btn-claro btn-sm">Volver a Cursos</a>
+    {% endif %}
+</div>
+
+<section class="rejilla rejilla-kpi">
+    <a href="{{ url_for('alertas.lista', estado='abierta', grupo=filtros.grupo) }}" class="tarjeta kpi c-rojo animar" style="color:inherit">
+        <div class="kpi-valor" data-contar="{{ conteo.get('abierta', 0) }}">0</div>
+        <div class="kpi-texto">Abiertas</div>
+   </a>
+    <a href="{{ url_for('alertas.lista', estado='en_seguimiento', grupo=filtros.grupo) }}" class="tarjeta kpi c-azul animar" style="color:inherit">
+        <div class="kpi-valor" data-contar="{{ conteo.get('en_seguimiento', 0) }}">0</div>
+        <div class="kpi-texto">En seguimiento</div>
+   </a>
+    <a href="{{ url_for('alertas.lista', estado='cerrada', grupo=filtros.grupo) }}" class="tarjeta kpi c-verde animar" style="color:inherit">
+        <div class="kpi-valor" data-contar="{{ conteo.get('cerrada', 0) }}">0</div>
+        <div class="kpi-texto">Cerradas</div>
+   </a>
+</section>
+
+<article class="tarjeta">
+    <div class="tarjeta-cabecera">
+        <form class="filtros" method="get" id="formFiltrosAlertas">
+            <input type="search" name="q" value="{{ filtros.texto }}" placeholder="Estudiante, documento o descripción…">
+            <select name="grupo">
+                <option value="">Todos los grupos</option>
+                {% for g in grupos %}<option value="{{ g }}" {{ 'selected' if filtros.grupo == g }}>{{ g }}</option>{% endfor %}
+            </select>
+            <select name="estado">
+                <option value="">Todos los estados</option>
+                {% for e in estados %}<option value="{{ e }}" {{ 'selected' if filtros.estado == e }}>{{ e|replace('_', ' ')|capitalize }}</option>{% endfor %}
+            </select>
+            <select name="nivel">
+                <option value="">Todos los niveles</option>
+                {% for n in niveles %}<option value="{{ n }}" {{ 'selected' if filtros.nivel == n }}>{{ n|capitalize }}</option>{% endfor %}
+            </select>
+            <select name="tipo">
+                <option value="">Todos los tipos</option>
+                {% for t in tipos %}<option value="{{ t }}" {{ 'selected' if filtros.tipo == t }}>{{ t|capitalize }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-claro">Filtrar</button>
+            <a href="{{ url_for('alertas.lista', grupo=filtros.grupo) }}" class="btn btn-claro">Limpiar</a>
+        </form>
+        <div class="acciones">
+            {% if usuario_actual.rol in ['administrador', 'coordinador'] %}
+            <form method="post" action="{{ url_for('alertas.generar') }}">
+                <button class="btn btn-acento" title="Revisa notas y asistencia y crea alertas nuevas">Generar automáticas</button>
+            </form>
+            {% endif %}
+            <a href="{{ url_for('alertas.nueva') }}" class="btn btn-primario">Nueva alerta</a>
+        </div>
+    </div>
+
+    <div class="tabla-contenedor">
+        <table class="tabla">
+            <thead>
+                <tr><th>Estudiante</th><th>Curso</th><th>Tipo</th><th>Nivel</th><th>Descripción</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for a in alertas %}
+                <tr>
+                    <td><div class="persona"><strong>{{ a.estudiante }}</strong><small>{{ a.documento }}</small></div></td>
+                    <td>{{ a.codigo or 'General' }}</td>
+                    <td>{{ a.tipo|capitalize }}{% if a.origen == 'automatica' %} <small class="suave">(automática)</small>{% endif %}</td>
+                    <td><span class="etiqueta nivel-{{ a.nivel }}">{{ a.nivel|capitalize }}</span></td>
+                    <td style="max-width:320px">
+                        {{ a.descripcion }}
+                        {% if a.seguimiento %}<br><small class="suave">Seguimiento: {{ a.seguimiento }}</small>{% endif %}
+                    </td>
+                    <td><span class="etiqueta estado-{{ a.estado }}">{{ a.estado|replace('_', ' ')|capitalize }}</span></td>
+                    <td><small>{{ (a.fecha_creacion|string)[:10] }}</small></td>
+                    <td>
+                        <div class="acciones">
+                            <a href="{{ url_for('alertas.editar', id=a.id) }}" class="btn btn-claro btn-sm" title="Editar / dar seguimiento">Editar</a>
+                            <form method="post" action="{{ url_for('alertas.eliminar', id=a.id) }}" data-confirmar="Se eliminará la alerta de {{ a.estudiante }}.">
+                                <button class="btn btn-claro btn-sm" title="Eliminar">Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="8" class="vacio">No hay alertas con esos filtros.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll("#formFiltrosAlertas select").forEach(function (select) {
+        select.addEventListener("change", function () {
+            document.getElementById("formFiltrosAlertas").submit();
+        });
+    });
+</script>
+{% endblock %}

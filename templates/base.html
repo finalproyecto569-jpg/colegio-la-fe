@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo %}Inicio{% endblock %} · I.E. La Fe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+<div class="layout">
+
+    <aside class="sidebar" id="sidebar">
+        <a href="{{ url_for('principal.inicio') }}" class="marca">
+            <span class="marca-logo">LF</span>
+            <span class="marca-texto"><small>Institución Educativa</small><strong>La Fe</strong></span>
+       </a>
+
+        {% set rol_usuario = usuario_actual.rol %}
+        {% set ep = request.endpoint or '' %}
+        <nav class="menu" aria-label="Menú principal">
+            <p class="menu-titulo">General</p>
+            {% if rol_usuario == 'estudiante' %}
+                <a href="{{ url_for('principal.mi_panel') }}" class="{{ 'activo' if ep == 'principal.mi_panel' }}">Mi panel</a>
+                <a href="{{ url_for('principal.mis_alertas') }}" class="{{ 'activo' if ep == 'principal.mis_alertas' }}">Mis alertas</a>
+            {% else %}
+                <a href="{{ url_for('principal.dashboard') }}" class="{{ 'activo' if ep == 'principal.dashboard' }}">Panel principal</a>
+            {% endif %}
+
+            {% if rol_usuario in ['administrador', 'coordinador', 'docente'] %}
+                <a href="{{ url_for('cursos.lista') }}" class="{{ 'activo' if ep.split('.')[0] in ['cursos', 'calificaciones', 'asistencia', 'alertas', 'reportes'] }}">Cursos</a>
+            {% endif %}
+            {% if rol_usuario == 'administrador' %}
+                <a href="{{ url_for('usuarios.lista') }}" class="{{ 'activo' if ep.startswith('usuarios') }}">Usuarios</a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-pie">
+            <small>Seguimiento académico escolar</small>
+        </div>
+    </aside>
+    <div class="fondo-oscuro" id="fondoOscuro"></div>
+
+    <div class="contenido">
+        <header class="barra-superior">
+            <button class="btn-menu" id="btnMenu" aria-label="Abrir menú">Menú</button>
+            <h1 class="titulo-pagina">{% block encabezado %}{% endblock %}</h1>
+            <div class="usuario-caja">
+                <div class="avatar">{{ usuario_actual.nombre[:1] if usuario_actual.nombre }}</div>
+                <div class="usuario-datos">
+                    <strong>{{ usuario_actual.nombre }}</strong>
+                    <span class="etiqueta-rol rol-{{ rol_usuario }}">{{ rol_usuario|capitalize }}</span>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-claro btn-sm" title="Cerrar sesión">Salir</a>
+            </div>
+        </header>
+
+        <div class="mensajes" id="mensajes">
+            {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+                <div class="mensaje mensaje-{{ categoria }}">
+                    <span>{{ mensaje }}</span>
+                    <button class="cerrar-mensaje" aria-label="Cerrar">×</button>
+                </div>
+            {% endfor %}
+        </div>
+
+        <main class="principal">
+            {% block contenido %}{% endblock %}
+        </main>
+
+        <footer class="pie">
+            Institución Educativa La Fe · Sistema de seguimiento académico
+        </footer>
+    </div>
+</div>
+
+<div class="modal" id="modalConfirmar" hidden>
+    <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+                <h3 id="modalTitulo">¿Estás seguro?</h3>
+        <p id="modalTexto">Esta acción no se puede deshacer.</p>
+        <div class="modal-botones">
+            <button class="btn btn-claro" id="modalCancelar">Cancelar</button>
+            <button class="btn btn-peligro" id="modalAceptar">Sí, eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

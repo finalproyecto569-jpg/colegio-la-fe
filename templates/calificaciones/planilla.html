@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block titulo %}Notas · {{ curso.nombre }}{% endblock %}
+{% block encabezado %}Calificaciones{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta">
+    <div class="tarjeta-cabecera">
+        <div>
+            <span class="curso-codigo">{{ curso.codigo }}</span>
+            <h2>{{ curso.nombre }}</h2>
+            <p class="suave">Corte 1 = 30% · Corte 2 = 30% · Corte 3 = 40% · Nota mínima para aprobar: {{ config.NOTA_MINIMA }}</p>
+        </div>
+        <div class="acciones">
+            <a href="{{ url_for('calificaciones.seleccionar', grupo=curso.grupo or 'SIN GRUPO') }}" class="btn btn-claro btn-sm">Otra asignatura</a>
+            <a href="{{ url_for('asistencia.planilla', id_curso=curso.id) }}" class="btn btn-claro btn-sm">Asistencia</a>
+        </div>
+    </div>
+
+    {% if estudiantes %}
+    <form method="post" id="formNotas" data-nota-minima="{{ config.NOTA_MINIMA }}">
+        <div class="tabla-contenedor">
+            <table class="tabla">
+                <thead>
+                    <tr><th>#</th><th>Estudiante</th><th class="centro">Corte 1</th><th class="centro">Corte 2</th>
+                        <th class="centro">Corte 3</th><th class="centro">Promedio</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                {% for e in estudiantes %}
+                    {% set n = notas.get(e.matricula_id, {}) %}
+                    <tr class="fila-notas">
+                        <td class="suave">{{ loop.index }}</td>
+                        <td><div class="persona"><strong>{{ e.nombre }}</strong><small>{{ e.documento }}</small></div></td>
+                        {% for corte in [1, 2, 3] %}
+                            <td class="centro">
+                                <input class="input-nota" type="text" inputmode="decimal" maxlength="4"
+                                       name="nota_{{ e.matricula_id }}_{{ corte }}" data-corte="{{ corte }}"
+                                       value="{{ n.get(corte) if n.get(corte) is not none else '' }}" placeholder="—"
+                                       aria-label="Corte {{ corte }} de {{ e.nombre }}">
+                            </td>
+                        {% endfor %}
+                        <td class="centro promedio-celda">—</td>
+                        <td class="estado-celda"></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="botones-form">
+            <span class="suave" id="avisoCambios" style="margin-right:auto;align-self:center"></span>
+            <button type="submit" class="btn btn-primario">Guardar notas</button>
+        </div>
+    </form>
+    {% else %}
+        <p class="vacio">Este curso no tiene estudiantes matriculados.</p>
+    {% endif %}
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calificaciones.js') }}"></script>
+{% endblock %}

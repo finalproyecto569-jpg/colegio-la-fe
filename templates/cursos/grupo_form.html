@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block titulo %}Nuevo grupo{% endblock %}
+{% block encabezado %}Nuevo grupo{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta form-angosto">
+    <div class="tarjeta-cabecera">
+        <h2>Datos del grupo</h2>
+        <a href="{{ url_for('cursos.lista') }}" class="btn btn-claro btn-sm">Volver</a>
+    </div>
+
+    <form method="post" class="formulario js-validar">
+        <div class="fila-campos">
+            <div class="campo">
+                <label for="grado">Grado <span class="req">*</span></label>
+                <input type="number" id="grado" name="grado" value="{{ datos.grado }}" required min="1" max="11" placeholder="Ej: 11">
+                <small class="error-campo"></small>
+            </div>
+            <div class="campo">
+                <label for="letra">Grupo <span class="req">*</span></label>
+                <select id="letra" name="letra" required>
+                    {% for l in letras %}
+                        <option value="{{ l }}" {{ 'selected' if datos.letra == l }}>{{ l }}</option>
+                    {% endfor %}
+                </select>
+                <small class="error-campo"></small>
+            </div>
+        </div>
+
+        <p class="grupo-vista-previa">Se creará el grupo <strong id="vistaPrevia">—</strong></p>
+
+        <div class="botones-form">
+            <a href="{{ url_for('cursos.lista') }}" class="btn btn-claro">Cancelar</a>
+            <button type="submit" class="btn btn-primario">Crear grupo</button>
+        </div>
+    </form>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const grado = document.getElementById("grado");
+    const letra = document.getElementById("letra");
+    const vista = document.getElementById("vistaPrevia");
+
+    function actualizarVista() {
+        vista.textContent = grado.value ? grado.value + "°" + letra.value : "—";
+    }
+    grado.addEventListener("input", actualizarVista);
+    letra.addEventListener("change", actualizarVista);
+    actualizarVista();
+</script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% set titulo_form = "Seguimiento de alerta" if editando else "Nueva alerta" %}
+{% block titulo %}{{ titulo_form }}{% endblock %}
+{% block encabezado %}{{ titulo_form }}{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta form-angosto">
+    <div class="tarjeta-cabecera">
+        <div>
+            <h2>Datos de la alerta</h2>
+            {% if editando %}
+                <small>Creada el {{ datos.fecha_creacion }} · {{ 'Generada automáticamente' if datos.origen == 'automatica' else 'Registrada manualmente' }}</small>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('alertas.lista') }}" class="btn btn-claro btn-sm">Volver</a>
+    </div>
+
+    <form method="post" class="formulario js-validar">
+        <div class="fila-campos">
+            <div class="campo">
+                <label for="estudiante_id">Estudiante <span class="req">*</span></label>
+                <select id="estudiante_id" name="estudiante_id" required>
+                    <option value="">Selecciona…</option>
+                    {% for e in estudiantes %}
+                        <option value="{{ e.id }}" {{ 'selected' if datos.estudiante_id|string == e.id|string }}>{{ e.nombre }} ({{ e.documento }})</option>
+                    {% endfor %}
+                </select>
+                <small class="error-campo"></small>
+            </div>
+            <div class="campo">
+                <label for="curso_id">Curso</label>
+                <select id="curso_id" name="curso_id">
+                    <option value="">General (sin curso)</option>
+                    {% for c in cursos %}
+                        <option value="{{ c.id }}" {{ 'selected' if datos.curso_id|string == c.id|string }}>{{ c.codigo }} · {{ c.nombre }}</option>
+                    {% endfor %}
+                </select>
+                <small class="error-campo"></small>
+            </div>
+        </div>
+
+        <div class="fila-campos">
+            <div class="campo">
+                <label for="tipo">Tipo <span class="req">*</span></label>
+                <select id="tipo" name="tipo" required>
+                    <option value="">Selecciona…</option>
+                    {% for t in tipos %}<option value="{{ t }}" {{ 'selected' if datos.tipo == t }}>{{ t|capitalize }}</option>{% endfor %}
+                </select>
+                <small class="error-campo"></small>
+            </div>
+            <div class="campo">
+                <label for="nivel">Nivel <span class="req">*</span></label>
+                <select id="nivel" name="nivel" required>
+                    {% for n in niveles %}<option value="{{ n }}" {{ 'selected' if datos.nivel == n }}>{{ n|capitalize }}</option>{% endfor %}
+                </select>
+                <small class="error-campo"></small>
+            </div>
+            <div class="campo">
+                <label for="estado">Estado <span class="req">*</span></label>
+                <select id="estado" name="estado" required>
+                    {% for e in estados %}<option value="{{ e }}" {{ 'selected' if datos.estado == e }}>{{ e|replace('_', ' ')|capitalize }}</option>{% endfor %}
+                </select>
+                <small class="error-campo"></small>
+            </div>
+        </div>
+
+        <div class="campo">
+            <label for="descripcion">Descripción <span class="req">*</span></label>
+            <textarea id="descripcion" name="descripcion" required minlength="10" maxlength="500"
+                      placeholder="¿Qué situación se detectó?">{{ datos.descripcion or '' }}</textarea>
+            <small class="ayuda"><span id="contadorDesc">0</span>/500 caracteres</small>
+            <small class="error-campo"></small>
+        </div>
+
+        <div class="campo">
+            <label for="seguimiento">Acciones de seguimiento</label>
+            <textarea id="seguimiento" name="seguimiento" maxlength="500"
+                      placeholder="Ej: Se citó al estudiante, se remitió a monitoría, se habló con el acudiente…">{{ datos.seguimiento or '' }}</textarea>
+            <small class="error-campo"></small>
+        </div>
+
+        <div class="botones-form">
+            <a href="{{ url_for('alertas.lista') }}" class="btn btn-claro">Cancelar</a>
+            <button type="submit" class="btn btn-primario">Guardar</button>
+        </div>
+    </form>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const desc = document.getElementById("descripcion");
+    const contador = document.getElementById("contadorDesc");
+    function contarCaracteres() { contador.textContent = desc.value.length; }
+    desc.addEventListener("input", contarCaracteres);
+    contarCaracteres();
+
+    const estado = document.getElementById("estado");
+    const seguimiento = document.getElementById("seguimiento");
+    function revisarEstado() {
+        seguimiento.required = estado.value === "cerrada";
+        seguimiento.placeholder = estado.value === "cerrada"
+            ? "Obligatorio: explica cómo se resolvió el caso."
+            : "Ej: Se citó al estudiante, se remitió a monitoría…";
+    }
+    estado.addEventListener("change", revisarEstado);
+    revisarEstado();
+</script>
+{% endblock %}

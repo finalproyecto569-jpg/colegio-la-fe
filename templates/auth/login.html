@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión · I.E. La Fe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body class="login-moderno"
+      style="--imagen-fondo: url('{{ url_for('static', filename='img/fondo.jpg') }}')">
+
+    <div class="burbuja b1"></div>
+    <div class="burbuja b2"></div>
+    <div class="burbuja b3"></div>
+
+    <main class="login-contenedor">
+
+        <section class="login-hero">
+            <div class="marca marca-grande">
+                <span class="marca-logo">LF</span>
+                <h1 class="marca-texto"><small>Institución Educativa</small><strong>La Fe</strong></h1>
+            </div>
+        </section>
+
+        <section class="login-vidrio">
+            <h2>Iniciar sesión</h2>
+            <p class="login-sub">Ingresa con tu correo institucional</p>
+
+            {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+                <div class="mensaje mensaje-{{ categoria }}">
+                    <span>{{ mensaje }}</span><button class="cerrar-mensaje" aria-label="Cerrar">×</button>
+                </div>
+            {% endfor %}
+
+            <form method="post" class="formulario js-validar">
+                <div class="campo">
+                    <label for="correo">Correo <span class="req">*</span></label>
+                    <input type="email" id="correo" name="correo" value="{{ correo }}" required
+                           placeholder="usuario@colegio.edu.co" autocomplete="username">
+                    <small class="error-campo"></small>
+                </div>
+                <div class="campo">
+                    <label for="password">Contraseña <span class="req">*</span></label>
+                    <div class="campo-clave">
+                        <input type="password" id="password" name="password" required minlength="6"
+                               placeholder="••••••" autocomplete="current-password">
+                        <button type="button" class="ver-clave" id="verClave" aria-label="Mostrar contraseña">Ver</button>
+                    </div>
+                    <small class="error-campo"></small>
+                </div>
+                <button type="submit" class="btn btn-primario btn-brillo">Entrar</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="login-pie">Institución Educativa La Fe · Sistema de seguimiento académico</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+    const clave = document.getElementById("password");
+    document.getElementById("verClave").addEventListener("click", function () {
+        clave.type = clave.type === "password" ? "text" : "password";
+    });
+</script>
+</body>
+</html>

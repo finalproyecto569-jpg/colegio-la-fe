@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block titulo %}Asistencia · {{ curso.nombre }}{% endblock %}
+{% block encabezado %}Asistencia{% endblock %}
+
+{% block contenido %}
+<section class="rejilla rejilla-asistencia">
+    <article class="tarjeta">
+        <div class="tarjeta-cabecera">
+            <div>
+                <span class="curso-codigo">{{ curso.codigo }}</span>
+                <h2>{{ curso.nombre }}</h2>
+            </div>
+            <a href="{{ url_for('asistencia.seleccionar', grupo=curso.grupo or 'SIN GRUPO') }}" class="btn btn-claro btn-sm">Otra asignatura</a>
+        </div>
+
+        {% if estudiantes %}
+
+        <form method="get" class="filtros" id="formFecha" style="margin-bottom:1rem">
+            <label for="fecha"><strong>Fecha de la clase:</strong></label>
+            <input type="date" id="fecha" name="fecha" value="{{ fecha }}" max="{{ hoy }}" style="width:auto">
+        </form>
+
+        <form method="post" id="formAsistencia">
+            <input type="hidden" name="fecha" value="{{ fecha }}">
+            <div class="filtros" style="justify-content:space-between;margin-bottom:.6rem">
+                <div class="contadores">
+                    <span class="etiqueta nivel-baja">Presentes: <b id="cPresente">0</b></span>
+                    <span class="etiqueta nivel-alta">Ausentes: <b id="cAusente">0</b></span>
+                    <span class="etiqueta nivel-media">Justificadas: <b id="cJustificada">0</b></span>
+                    <span class="etiqueta riesgo-sin-datos">Sin marcar: <b id="cSin">0</b></span>
+                </div>
+                <button type="button" class="btn btn-claro btn-sm" id="todosPresentes">Todos presentes</button>
+            </div>
+
+            <div class="tabla-contenedor">
+                <table class="tabla">
+                    <thead><tr><th>#</th><th>Estudiante</th><th class="centro">Estado</th></tr></thead>
+                    <tbody>
+                    {% for e in estudiantes %}
+                        {% set actual = marcados.get(e.matricula_id) %}
+                        <tr>
+                            <td class="suave">{{ loop.index }}</td>
+                            <td><div class="persona"><strong>{{ e.nombre }}</strong><small>{{ e.documento }}</small></div></td>
+                            <td class="centro">
+                                <div class="opciones-asistencia">
+                                    {% for estado in ['presente', 'ausente', 'justificada'] %}
+                                        {% set id_op = 'e' ~ e.matricula_id ~ estado %}
+                                        <input type="radio" id="{{ id_op }}" name="estado_{{ e.matricula_id }}" value="{{ estado }}" {{ 'checked' if actual == estado }}>
+                                        <label for="{{ id_op }}" class="op-{{ estado }}">{{ estado|capitalize }}</label>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="botones-form">
+                <button type="submit" class="btn btn-primario">Guardar asistencia</button>
+            </div>
+        </form>
+        {% else %}
+            <p class="vacio">Este curso no tiene estudiantes matriculados.</p>
+        {% endif %}
+    </article>
+
+    <article class="tarjeta">
+        <div class="tarjeta-cabecera"><h2>Historial de clases</h2><small>{{ historial|length }} clases</small></div>
+        <ul class="lista-simple">
+            {% for h in historial %}
+                <li>
+                    <a href="{{ url_for('asistencia.planilla', id_curso=curso.id, fecha=h.fecha) }}" class="persona">
+                        <strong>{{ h.fecha }}</strong>
+                        <small>Presentes {{ h.presentes }} · Ausentes {{ h.ausentes }} · Justificadas {{ h.justificadas }}</small>
+                   </a>
+                    <form method="post" action="{{ url_for('asistencia.eliminar', id_curso=curso.id) }}"
+                          data-confirmar="Se borrará la asistencia de todos los estudiantes del {{ h.fecha }}.">
+                        <input type="hidden" name="fecha" value="{{ h.fecha }}">
+                        <button class="btn btn-claro btn-sm btn-icono" title="Eliminar">Eliminar</button>
+                    </form>
+                </li>
+            {% else %}
+                <li class="vacio">Todavía no se ha tomado asistencia.</li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/asistencia.js') }}"></script>
+{% endblock %}

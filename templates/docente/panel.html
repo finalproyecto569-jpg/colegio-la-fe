@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Panel principal{% endblock %}
+{% block encabezado %}Panel principal{% endblock %}
+
+{% block contenido %}
+
+{% include "docente/_saludo.html" %}
+
+<div style="margin-top: 1.2rem">
+    {% include "docente/_pendientes.html" %}
+</div>
+
+<div style="margin-top: 1.2rem">
+    {% include "anuncios/_lista.html" %}
+</div>
+{% endblock %}

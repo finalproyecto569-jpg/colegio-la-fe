@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block titulo %}{{ curso.nombre }}{% endblock %}
+{% block encabezado %}{{ curso.nombre }}{% endblock %}
+
+{% block contenido %}
+{% set gestiona = usuario_actual.rol in ['administrador', 'coordinador'] %}
+
+<article class="tarjeta">
+    <div class="tarjeta-cabecera">
+        <div>
+            <span class="curso-codigo">{{ curso.codigo }}</span>
+            <h2>{{ curso.nombre }}</h2>
+            <p class="suave">Grupo {{ curso.grupo or (curso.semestre ~ "°") }} · Año {{ curso.periodo }} · Docente: {{ curso.docente or 'Sin asignar' }}</p>
+        </div>
+        <div class="acciones">
+            <a href="{{ url_for('cursos.lista', grupo=curso.grupo or 'SIN GRUPO') }}" class="btn btn-claro">Volver al grupo</a>
+            <a href="{{ url_for('calificaciones.planilla', id_curso=curso.id) }}" class="btn btn-primario">Notas</a>
+            <a href="{{ url_for('asistencia.planilla', id_curso=curso.id) }}" class="btn btn-exito">Asistencia</a>
+            <a href="{{ url_for('reportes.index', curso=curso.id) }}" class="btn btn-claro">Reporte</a>
+        </div>
+    </div>
+</article>
+
+<section class="rejilla {{ 'rejilla-2' if gestiona }}" style="margin-top:1.2rem">
+    <article class="tarjeta">
+        <div class="tarjeta-cabecera"><h2>Estudiantes matriculados ({{ estudiantes|length }})</h2></div>
+        <div class="tabla-contenedor">
+            <table class="tabla">
+                <thead><tr><th>Estudiante</th><th>Grado</th>{% if gestiona %}<th></th>{% endif %}</tr></thead>
+                <tbody>
+                {% for e in estudiantes %}
+                    <tr>
+                        <td><div class="persona"><strong>{{ e.nombre }}</strong><small>{{ e.documento }} · {{ e.correo }}</small></div></td>
+                        <td>{{ e.programa or '—' }}</td>
+                        {% if gestiona %}
+                        <td>
+                            <form method="post" action="{{ url_for('cursos.retirar', id=curso.id, id_matricula=e.matricula_id) }}"
+                                  data-confirmar="Se retirará a {{ e.nombre }} del curso y se borrarán sus notas y asistencia en él.">
+                                <button class="btn btn-claro btn-sm" title="Retirar del curso">Retirar</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3" class="vacio">Aún no hay estudiantes matriculados.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    {% if gestiona %}
+    <article class="tarjeta">
+        <div class="tarjeta-cabecera">
+            <h2>Matricular estudiantes</h2>
+            <small><span id="contadorSeleccion">0</span> seleccionados</small>
+        </div>
+        {% if disponibles %}
+        <form method="post" action="{{ url_for('cursos.matricular', id=curso.id) }}" id="formMatricula">
+            <div class="filtros" style="margin-bottom:.8rem">
+                <input type="search" id="filtroDisponibles" placeholder="Filtrar estudiantes…">
+                <button type="button" class="btn btn-claro btn-sm" id="marcarTodos">Marcar todos</button>
+            </div>
+            <div style="max-height:340px;overflow:auto;display:grid;gap:.3rem" id="listaDisponibles">
+                {% for e in disponibles %}
+                    <label class="check" style="font-weight:500;padding:.4rem;border-radius:8px" data-nombre="{{ e.nombre|lower }} {{ e.documento }}">
+                        <input type="checkbox" name="estudiantes" value="{{ e.id }}"> {{ e.nombre }} <small class="suave">({{ e.documento }})</small>
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="botones-form"><button class="btn btn-primario">Matricular seleccionados</button></div>
+        </form>
+        {% else %}
+            <p class="vacio">Todos los estudiantes activos ya están en este curso.</p>
+        {% endif %}
+    </article>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const lista = document.getElementById("listaDisponibles");
+    if (lista) {
+        const casillas = lista.querySelectorAll("input[type=checkbox]");
+        const contador = document.getElementById("contadorSeleccion");
+
+        function actualizarContador() {
+            contador.textContent = lista.querySelectorAll("input:checked").length;
+        }
+        casillas.forEach(function (c) { c.addEventListener("change", actualizarContador); });
+
+        document.getElementById("filtroDisponibles").addEventListener("input", function () {
+            const texto = this.value.toLowerCase();
+            lista.querySelectorAll("label").forEach(function (label) {
+                label.classList.toggle("oculto", !label.dataset.nombre.includes(texto));
+            });
+        });
+
+        document.getElementById("marcarTodos").addEventListener("click", function () {
+            lista.querySelectorAll("label:not(.oculto) input").forEach(function (c) { c.checked = true; });
+            actualizarContador();
+        });
+
+        document.getElementById("formMatricula").addEventListener("submit", function (e) {
+            if (lista.querySelectorAll("input:checked").length === 0) {
+                e.preventDefault();
+                alert("Selecciona al menos un estudiante.");
+            }
+        });
+    }
+</script>
+{% endblock %}

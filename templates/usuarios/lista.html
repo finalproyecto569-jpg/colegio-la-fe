@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios{% endblock %}
+{% block encabezado %}Usuarios{% endblock %}
+
+{% block contenido %}
+<section class="rejilla rejilla-kpi">
+    {% for r in roles %}
+    <article class="tarjeta kpi animar">
+        <span class="etiqueta-rol rol-{{ r }}">{{ r|capitalize }}</span>
+        <div class="kpi-valor" style="margin-top:.5rem" data-contar="{{ conteo.get(r, 0) }}">0</div>
+        <div class="kpi-texto">usuarios</div>
+    </article>
+    {% endfor %}
+</section>
+
+<article class="tarjeta">
+    <div class="tarjeta-cabecera">
+
+        <form class="filtros" id="formFiltros" method="get" action="{{ url_for('usuarios.lista') }}">
+            <input type="search" name="q" id="buscar" value="{{ texto }}" placeholder="Buscar por nombre, correo o documento…" autocomplete="off">
+            <select name="rol" id="filtroRol">
+                <option value="">Todos los roles</option>
+                {% for r in roles %}
+                    <option value="{{ r }}" {{ 'selected' if r == rol }}>{{ r|capitalize }}</option>
+                {% endfor %}
+            </select>
+            <noscript><button class="btn btn-claro">Filtrar</button></noscript>
+        </form>
+        <a href="{{ url_for('usuarios.nuevo') }}" class="btn btn-primario">Nuevo usuario</a>
+    </div>
+
+    <p class="suave" style="margin-bottom:.6rem"><span id="totalResultados">{{ usuarios|length }}</span> resultado(s)</p>
+
+    <div class="tabla-contenedor">
+        <table class="tabla">
+            <thead>
+                <tr><th>Nombre</th><th>Documento</th><th>Correo</th><th>Rol</th><th>Grado</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody id="cuerpoTabla">
+            {% for u in usuarios %}
+                <tr>
+                    <td><strong>{{ u.nombre }}</strong></td>
+                    <td>{{ u.documento }}</td>
+                    <td>{{ u.correo }}</td>
+                    <td><span class="etiqueta-rol rol-{{ u.rol }}">{{ u.rol|capitalize }}</span></td>
+                    <td>{{ u.programa or '—' }}</td>
+                    <td>{% if u.activo %}<span class="etiqueta nivel-baja">Activo</span>{% else %}<span class="etiqueta estado-cerrada">Inactivo</span>{% endif %}</td>
+                    <td>
+                        <div class="acciones">
+                            <a href="{{ url_for('usuarios.editar', id=u.id) }}" class="btn btn-claro btn-sm">Editar</a>
+                            <form method="post" action="{{ url_for('usuarios.eliminar', id=u.id) }}"
+                                  data-confirmar="Se eliminará a {{ u.nombre }} y toda su información relacionada.">
+                                <button class="btn btn-claro btn-sm" title="Eliminar">Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7" class="vacio">No se encontraron usuarios.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+{% endblock %}

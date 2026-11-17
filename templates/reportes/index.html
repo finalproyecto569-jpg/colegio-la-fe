@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes{% endblock %}
+{% block encabezado %}Reporte académico{{ ' · ' ~ filtros.programa if filtros.programa else ' · Todos los grupos' }}{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta-cabecera">
+    {% if filtros.programa %}
+        <a href="{{ url_for('cursos.lista', grupo=filtros.programa) }}" class="btn btn-claro btn-sm">Volver al grupo {{ filtros.programa }}</a>
+    {% else %}
+        <a href="{{ url_for('cursos.lista') }}" class="btn btn-claro btn-sm">Volver a Cursos</a>
+    {% endif %}
+</div>
+
+<article class="tarjeta no-imprimir">
+    <form class="filtros" method="get" id="formReporte">
+        <input type="search" name="q" value="{{ filtros.texto }}" placeholder="Nombre o documento…">
+        <select name="curso">
+            <option value="">Todos los cursos</option>
+            {% for c in cursos %}<option value="{{ c.id }}" {{ 'selected' if filtros.curso_id == c.id }}>{{ c.codigo }} · {{ c.nombre }}</option>{% endfor %}
+        </select>
+        <select name="programa">
+            <option value="">Todos los grupos</option>
+            {% for p in programas %}<option value="{{ p }}" {{ 'selected' if filtros.programa == p }}>{{ p }}</option>{% endfor %}
+        </select>
+        <select name="riesgo">
+            <option value="">Cualquier riesgo</option>
+            {% for r in ['alto', 'medio', 'bajo', 'sin datos'] %}<option value="{{ r }}" {{ 'selected' if filtros.riesgo == r }}>Riesgo {{ r }}</option>{% endfor %}
+        </select>
+        <button class="btn btn-claro">Aplicar</button>
+        <a href="{{ url_for('reportes.index', programa=filtros.programa) }}" class="btn btn-claro">Limpiar</a>
+    </form>
+</article>
+
+<section class="rejilla rejilla-kpi" style="margin-top:1.2rem">
+    <article class="tarjeta kpi c-azul"><div class="kpi-valor">{{ resumen.total }}</div><div class="kpi-texto">Registros</div></article>
+    <article class="tarjeta kpi c-verde"><div class="kpi-valor">{{ resumen.promedio }}</div><div class="kpi-texto">Promedio</div></article>
+    <article class="tarjeta kpi c-verde"><div class="kpi-valor">{{ resumen.aprobando }}</div><div class="kpi-texto">Aprobando</div></article>
+    <article class="tarjeta kpi c-rojo"><div class="kpi-valor">{{ resumen.riesgo.alto }}</div><div class="kpi-texto">Riesgo alto</div></article>
+    <article class="tarjeta kpi c-naranja"><div class="kpi-valor">{{ resumen.riesgo.medio }}</div><div class="kpi-texto">Riesgo medio</div></article>
+</section>
+
+<article class="tarjeta">
+    <div class="tabla-contenedor">
+        <table class="tabla" id="tablaReporte">
+            <thead>
+                <tr>
+                    <th data-orden="texto">Estudiante</th><th data-orden="texto">Asignatura</th>
+                    <th class="centro">C1</th><th class="centro">C2</th><th class="centro">C3</th>
+                    <th class="centro" data-orden="numero">Promedio</th>
+                    <th class="centro" data-orden="numero">Fallas</th>
+                    <th data-orden="texto">Riesgo</th>
+                    <th class="no-imprimir"></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for r in filas %}
+                <tr>
+                    <td><div class="persona"><strong>{{ r.estudiante }}</strong><small>{{ r.documento }} · {{ r.programa }}</small></div></td>
+                    <td>{{ r.codigo }}<br><small class="suave">{{ r.curso }}</small></td>
+                    {% for n in [r.corte1, r.corte2, r.corte3] %}
+                        <td class="centro">{{ n if n is not none else '—' }}</td>
+                    {% endfor %}
+                    <td class="centro promedio-celda {{ 'baja' if r.bajo_rendimiento else 'buena' if r.promedio is not none }}">{{ r.promedio if r.promedio is not none else '—' }}</td>
+                    <td class="centro" data-valor="{{ r.pct_inasistencia }}">{{ r.fallas }}/{{ r.clases }}<br><small class="suave">{{ r.pct_inasistencia }}%</small></td>
+                    <td><span class="etiqueta riesgo-{{ r.riesgo|replace(' ', '-') }}">{{ r.riesgo|capitalize }}</span></td>
+                    <td class="no-imprimir">
+                        {% if r.riesgo in ['alto', 'medio'] %}
+                            <a href="{{ url_for('alertas.nueva', estudiante=r.estudiante_id, curso=r.curso_id) }}" class="btn btn-claro btn-sm" title="Crear alerta">Crear alerta</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="9" class="vacio">No hay datos con esos filtros.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const tabla = document.getElementById("tablaReporte");
+    tabla.querySelectorAll("th[data-orden]").forEach(function (th) {
+        th.style.cursor = "pointer";
+        let ascendente = true;
+
+        th.addEventListener("click", function () {
+            const columna = Array.from(th.parentNode.children).indexOf(th);
+            const cuerpo = tabla.querySelector("tbody");
+            const filas = Array.from(cuerpo.querySelectorAll("tr"));
+            if (filas.length < 2) return;
+
+            filas.sort(function (a, b) {
+                const celdaA = a.children[columna], celdaB = b.children[columna];
+                let x = celdaA.dataset.valor || celdaA.innerText.trim();
+                let y = celdaB.dataset.valor || celdaB.innerText.trim();
+                if (th.dataset.orden === "numero") {
+                    x = parseFloat(x) || 0;
+                    y = parseFloat(y) || 0;
+                    return ascendente ? x - y : y - x;
+                }
+                return ascendente ? x.localeCompare(y) : y.localeCompare(x);
+            });
+            filas.forEach(function (f) { cuerpo.appendChild(f); });
+            ascendente = !ascendente;
+        });
+    });
+</script>
+{% endblock %}

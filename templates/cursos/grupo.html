@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% set titulo_grupo = 'Asignaturas sin grupo' if grupo == 'SIN GRUPO' else 'Grupo ' ~ grupo %}
+{% block titulo %}{{ titulo_grupo }}{% endblock %}
+{% block encabezado %}{{ titulo_grupo }}{% endblock %}
+
+{% block contenido %}
+{% set gestiona = usuario_actual.rol in ['administrador', 'coordinador'] %}
+
+<div class="tarjeta-cabecera">
+    <a href="{{ url_for('cursos.lista') }}" class="btn btn-claro btn-sm">Volver a los grupos</a>
+    {% if gestiona and grupo != 'SIN GRUPO' %}
+        <div class="acciones">
+            {% if not asignaturas and not estudiantes %}
+                <form method="post" action="{{ url_for('cursos.eliminar_grupo') }}" data-confirmar="Se eliminará el grupo {{ grupo }}.">
+                    <input type="hidden" name="nombre" value="{{ grupo }}">
+                    <button class="btn btn-claro btn-sm">Eliminar grupo</button>
+                </form>
+            {% endif %}
+            <a href="{{ url_for('cursos.nuevo', grupo=grupo) }}" class="btn btn-primario btn-sm">Nueva asignatura para {{ grupo }}</a>
+        </div>
+    {% endif %}
+</div>
+
+{% if grupo != 'SIN GRUPO' %}
+<nav class="tarjeta botones-grupo" aria-label="Acciones del grupo {{ grupo }}">
+    <a href="{{ url_for('calificaciones.seleccionar', grupo=grupo) }}" class="btn btn-primario">Calificaciones</a>
+    <a href="{{ url_for('asistencia.seleccionar', grupo=grupo) }}" class="btn btn-exito">Asistencia</a>
+    <a href="{{ url_for('alertas.lista', grupo=grupo) }}" class="btn btn-acento">Alertas</a>
+    <a href="{{ url_for('reportes.index', programa=grupo) }}" class="btn btn-claro">Reportes</a>
+</nav>
+{% endif %}
+
+<section class="rejilla rejilla-asistencia">
+
+    {% if grupo != 'SIN GRUPO' %}
+    <article class="tarjeta">
+        <div class="tarjeta-cabecera">
+            <h2>Lista de estudiantes</h2>
+            <small>{{ estudiantes|length }} en {{ grupo }}</small>
+        </div>
+        <div class="tabla-contenedor">
+            <table class="tabla">
+                <thead>
+                    <tr><th>#</th><th>Estudiante</th><th>Documento</th><th class="centro">Promedio</th></tr>
+                </thead>
+                <tbody>
+                {% for e in estudiantes %}
+                    <tr>
+                        <td class="suave">{{ loop.index }}</td>
+                        <td><strong>{{ e.nombre }}</strong></td>
+                        <td>{{ e.documento }}</td>
+                        <td class="centro promedio-celda {{ 'baja' if e.promedio is not none and e.promedio < config.NOTA_MINIMA else 'buena' if e.promedio is not none }}">
+                            {{ e.promedio if e.promedio is not none else '—' }}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4" class="vacio">Este grupo no tiene estudiantes.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+    {% endif %}
+
+    <article class="tarjeta">
+        <div class="tarjeta-cabecera">
+            <h2>Asignaturas</h2>
+            <small>{{ asignaturas|length }}</small>
+        </div>
+        <ul class="lista-simple">
+            {% for c in asignaturas %}
+                <li class="asignatura-item">
+                    <div class="persona">
+                        <strong>{{ c.nombre }}</strong>
+                        <small>Profesor: {{ c.docente or 'Sin asignar' }} · {{ c.total_estudiantes }} estudiantes</small>
+                    </div>
+                    <div class="acciones">
+                        <a href="{{ url_for('cursos.detalle', id=c.id) }}" class="btn btn-claro btn-sm">{{ 'Matrícula' if gestiona else 'Ver' }}</a>
+                        {% if gestiona %}
+                            <a href="{{ url_for('cursos.editar', id=c.id) }}" class="btn btn-claro btn-sm">Editar</a>
+                            <form method="post" action="{{ url_for('cursos.eliminar', id=c.id) }}"
+                                  data-confirmar="Se eliminará {{ c.nombre }} con sus matrículas, notas y asistencia.">
+                                <button class="btn btn-claro btn-sm">Eliminar</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </li>
+            {% else %}
+                <li class="vacio">Este grupo no tiene asignaturas.</li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endblock %}

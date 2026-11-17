@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block titulo %}Mi panel{% endblock %}
+{% block encabezado %}Mi panel académico{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta bienvenida animar">
+    <div>
+        <h2 style="font-size:1.5rem">Hola, {{ estudiante.nombre.split(' ')[0] }}</h2>
+        <p>{{ estudiante.programa }} · Documento {{ estudiante.documento }}</p>
+    </div>
+    <div>
+        <div class="gran-nota">{{ promedio_general if promedio_general is not none else '—' }}</div>
+        <small style="opacity:.85">Promedio general</small>
+    </div>
+</article>
+
+{% set alertas_activas = alertas|rejectattr('estado', 'equalto', 'cerrada')|list %}
+{% if alertas_activas %}
+<article class="tarjeta" style="margin-top:1.2rem;border-left:4px solid var(--acento)">
+    <div class="tarjeta-cabecera"><h2>Tienes {{ alertas_activas|length }} alerta(s) de seguimiento</h2></div>
+    <ul class="lista-simple">
+        {% for a in alertas_activas %}
+            <li>
+                <div class="persona">
+                    <strong>{{ a.curso or 'General' }}</strong>
+                    <small>{{ a.descripcion }}</small>
+                    {% if a.seguimiento %}<small>Seguimiento: {{ a.seguimiento }}</small>{% endif %}
+                </div>
+                <span class="etiqueta estado-{{ a.estado }}">{{ a.estado|replace('_', ' ')|capitalize }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+</article>
+{% endif %}
+
+<section class="rejilla rejilla-3" style="margin-top:1.2rem">
+    {% for r in filas %}
+    <article class="tarjeta animar">
+        <div class="tarjeta-cabecera" style="margin-bottom:.3rem">
+            <span class="curso-codigo">{{ r.codigo }}</span>
+            <span class="etiqueta riesgo-{{ r.riesgo|replace(' ', '-') }}">Riesgo {{ r.riesgo }}</span>
+        </div>
+        <h3>{{ r.curso }}</h3>
+        <small>Docente: {{ r.docente or 'Sin asignar' }}</small>
+
+        <div class="cortes">
+            {% for n in [r.corte1, r.corte2, r.corte3] %}
+                <div class="corte">
+                    <small>Corte {{ loop.index }}</small>
+                    <strong class="{{ 'promedio-celda baja' if n is not none and n < config.NOTA_MINIMA }}">{{ n if n is not none else '—' }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="barra-fila" style="grid-template-columns:80px 1fr 48px">
+            <span>Promedio</span>
+            <div class="barra-fondo"><div class="barra-relleno {{ 'baja' if r.bajo_rendimiento }}" data-ancho="{{ (r.promedio or 0) * 20 }}"></div></div>
+            <strong>{{ r.promedio if r.promedio is not none else '—' }}</strong>
+        </div>
+        <div class="barra-fila" style="grid-template-columns:80px 1fr 48px;margin-top:.5rem">
+            <span>Asistencia</span>
+            <div class="barra-fondo"><div class="barra-relleno {{ 'baja' if r.muchas_fallas else 'verde' }}" data-ancho="{{ r.pct_asistencia or 0 }}"></div></div>
+            <strong>{{ r.pct_asistencia if r.pct_asistencia is not none else '—' }}{{ '%' if r.pct_asistencia is not none }}</strong>
+        </div>
+
+        <details>
+            <summary>Ver asistencia ({{ r.fallas }} fallas de {{ r.clases }})</summary>
+            <div class="puntos-asistencia">
+                {% for a in historial[r.matricula_id]|reverse %}
+                    <span class="p-{{ a.estado }}" title="{{ a.fecha }}: {{ a.estado }}"></span>
+                {% endfor %}
+            </div>
+        </details>
+    </article>
+    {% else %}
+        <div class="tarjeta vacio">No estás matriculado en ningún curso.</div>
+    {% endfor %}
+</section>
+
+<div style="margin-top: 1.2rem">
+    {% include "anuncios/_lista.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    setTimeout(function () {
+        document.querySelectorAll(".barra-relleno[data-ancho]").forEach(function (barra) {
+            barra.style.width = barra.dataset.ancho + "%";
+        });
+    }, 150);
+</script>
+{% endblock %}

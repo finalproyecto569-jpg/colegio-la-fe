@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set nombre_grupo = 'Otras asignaturas' if grupo == 'SIN GRUPO' else 'Grupo ' ~ grupo %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block encabezado %}{{ titulo }} · {{ nombre_grupo }}{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta-cabecera">
+    <a href="{{ url_for('cursos.lista', grupo=grupo) }}" class="btn btn-claro btn-sm">Volver al grupo</a>
+</div>
+<p class="suave" style="margin-bottom:1rem">{{ texto }}</p>
+
+<section class="rejilla rejilla-3">
+    {% for c in cursos %}
+        <a href="{{ url_for(destino, id_curso=c.id) }}" class="tarjeta curso-tarjeta animar">
+            <span class="curso-codigo">{{ c.codigo }}</span>
+            <h3>{{ c.nombre }}</h3>
+            <span class="suave">Profesor: {{ c.docente or 'Sin asignar' }}</span>
+            <div class="curso-datos">
+                <span>{{ c.total_estudiantes }} estudiantes</span>
+                <span>Año {{ c.periodo }}</span>
+            </div>
+        </a>
+    {% else %}
+        <div class="tarjeta vacio">Este grupo no tiene asignaturas.</div>
+    {% endfor %}
+</section>
+{% endblock %}

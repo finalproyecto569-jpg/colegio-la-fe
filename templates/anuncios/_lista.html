@@ -1,0 +1,41 @@
+<article class="tarjeta anuncios">
+    <div class="tarjeta-cabecera">
+        <h2>Anuncios y eventos</h2>
+        {% if usuario_actual.rol in ['administrador', 'coordinador'] %}
+            <a href="{{ url_for('anuncios.nuevo') }}" class="btn btn-primario btn-sm">Nuevo anuncio</a>
+        {% endif %}
+    </div>
+
+    <div class="anuncios-lista">
+        {% for a in anuncios %}
+            <section class="anuncio">
+                <h3 class="anuncio-titulo">{{ a.titulo }}</h3>
+                <p class="anuncio-autor">
+                    {{ a.autor or 'Institución Educativa La Fe' }} publicado el {{ a.fecha_publicacion|fecha_larga }}
+                </p>
+
+                {% if a.fecha_evento %}
+                    <p class="anuncio-fecha">Fecha del evento: <strong>{{ a.fecha_evento|fecha_larga }}</strong></p>
+                {% endif %}
+
+                {% if a.imagen %}
+                    <img class="anuncio-imagen" src="{{ url_for('static', filename=a.imagen) }}" alt="Imagen del anuncio: {{ a.titulo }}">
+                {% endif %}
+
+                <p class="anuncio-texto">{{ a.descripcion }}</p>
+
+                {% if usuario_actual.rol in ['administrador', 'coordinador'] %}
+                    <div class="acciones">
+                        <a href="{{ url_for('anuncios.editar', id=a.id) }}" class="btn btn-claro btn-sm">Editar</a>
+                        <form method="post" action="{{ url_for('anuncios.eliminar', id=a.id) }}"
+                              data-confirmar="Se eliminará el anuncio &quot;{{ a.titulo }}&quot;.">
+                            <button class="btn btn-claro btn-sm">Eliminar</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </section>
+        {% else %}
+            <p class="vacio">Todavía no hay anuncios publicados.</p>
+        {% endfor %}
+    </div>
+</article>

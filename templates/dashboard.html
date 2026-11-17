@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block titulo %}Panel principal{% endblock %}
+{% block encabezado %}Panel principal{% endblock %}
+
+{% block contenido %}
+
+<section class="rejilla rejilla-kpi">
+    <article class="tarjeta kpi c-azul animar">
+        <div class="kpi-valor" data-contar="{{ indicadores.estudiantes }}">0</div>
+        <div class="kpi-texto">Estudiantes</div>
+    </article>
+    <article class="tarjeta kpi c-morado animar">
+        <div class="kpi-valor" data-contar="{{ indicadores.cursos }}">0</div>
+        <div class="kpi-texto">Asignaturas</div>
+    </article>
+    {% if usuario_actual.rol in ['administrador', 'coordinador'] %}
+    <article class="tarjeta kpi c-verde animar">
+        <div class="kpi-valor" data-contar="{{ indicadores.promedio }}">0</div>
+        <div class="kpi-texto">Promedio general</div>
+    </article>
+    {% endif %}
+    <article class="tarjeta kpi c-rojo animar">
+        <div class="kpi-valor" data-contar="{{ indicadores.alertas_abiertas }}">0</div>
+        <div class="kpi-texto">Alertas activas</div>
+    </article>
+    <article class="tarjeta kpi c-rojo animar">
+        <div class="kpi-valor" data-contar="{{ indicadores.en_riesgo }}">0</div>
+        <div class="kpi-texto">Casos en riesgo</div>
+    </article>
+</section>
+
+{% if usuario_actual.rol in ['administrador', 'coordinador'] %}
+<article class="tarjeta">
+    <div class="tarjeta-cabecera"><h2>Promedio por grupo</h2><small>escala 0 - 5</small></div>
+    <div class="barras" id="graficaPromedios"><p class="suave">Cargando…</p></div>
+</article>
+{% endif %}
+
+<div style="margin-top: 1.2rem">
+    {% include "anuncios/_lista.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if usuario_actual.rol in ['administrador', 'coordinador'] %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endif %}
+{% endblock %}

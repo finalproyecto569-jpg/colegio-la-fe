@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}Mis alertas{% endblock %}
+{% block encabezado %}Mis alertas{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta animar">
+    <div class="tarjeta-cabecera">
+        <h2>Alertas de seguimiento</h2>
+        <small class="suave">{{ abiertas }} activa(s) de {{ alertas|length }}</small>
+    </div>
+    <p class="suave" style="margin-bottom:1rem">
+        Aquí ves los avisos que tus docentes o la coordinación registraron sobre tus notas y tu asistencia.
+    </p>
+
+    <div class="tabla-contenedor">
+        <table class="tabla">
+            <thead>
+                <tr><th>Fecha</th><th>Asignatura</th><th>Tipo</th><th>Descripción</th><th>Estado</th></tr>
+            </thead>
+            <tbody>
+            {% for a in alertas %}
+                <tr>
+                    <td><small>{{ (a.fecha_creacion|string)[:10] }}</small></td>
+                    <td>{{ a.curso or 'General' }}</td>
+                    <td>{{ a.tipo|capitalize }}</td>
+                    <td style="max-width:360px">
+                        {{ a.descripcion }}
+                        {% if a.seguimiento %}<br><small class="suave">Seguimiento: {{ a.seguimiento }}</small>{% endif %}
+                    </td>
+                    <td><span class="etiqueta estado-{{ a.estado }}">{{ a.estado|replace('_', ' ')|capitalize }}</span></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="vacio">No tienes alertas. ¡Sigue así!</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+{% endblock %}

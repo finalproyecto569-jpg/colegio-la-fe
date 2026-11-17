@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Alertas{% endblock %}
+{% block encabezado %}Alertas de seguimiento{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta-cabecera">
+    <p class="suave">Elige un grupo para ver las alertas de sus estudiantes.</p>
+    <div class="acciones">
+        <a href="{{ url_for('alertas.lista', grupo='') }}" class="btn btn-claro">Ver todas</a>
+        {% if usuario_actual.rol in ['administrador', 'coordinador'] %}
+        <form method="post" action="{{ url_for('alertas.generar') }}">
+            <button class="btn btn-acento" title="Revisa notas y asistencia y crea alertas nuevas">Generar automáticas</button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('alertas.nueva') }}" class="btn btn-primario">Nueva alerta</a>
+    </div>
+</div>
+
+<section class="rejilla rejilla-grupos">
+    {% for t in tarjetas %}
+        <a href="{{ url_for('alertas.lista', grupo=t.grupo) }}" class="tarjeta grupo-tarjeta animar">
+            <span class="grupo-grado">Alertas del grupo</span>
+            <span class="grupo-nombre">{{ t.grupo }}</span>
+            <div class="grupo-datos">
+                <span class="{{ 'texto-alerta' if t.abiertas }}"><strong>{{ t.abiertas }}</strong> abierta(s)</span>
+                <span><strong>{{ t.seguimiento }}</strong> en seguimiento</span>
+                <span><strong>{{ t.cerradas }}</strong> cerrada(s)</span>
+            </div>
+            <span class="grupo-ver">Ver alertas</span>
+        </a>
+    {% else %}
+        <div class="tarjeta vacio">No hay grupos con asignaturas todavía.</div>
+    {% endfor %}
+</section>
+{% endblock %}
